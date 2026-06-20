@@ -2,6 +2,8 @@
 
 PulseMesh is an "Invisible Infrastructure" platform that transforms ICU physiologic data into a real-time, privacy-preserving alarm intelligence mesh.
 
+Originally built for HackTJ 2026.
+
 This monorepo provides an MVP implementation with:
 
 - `apps/web`: Next.js App Router UI (Tailwind + shadcn-style primitives + Zustand + TanStack Query + React Three Fiber).
