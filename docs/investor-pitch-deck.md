@@ -42,7 +42,7 @@ Speaker note: Explain that PulseMesh augments teams, not replaces clinical judgm
 ## Slide 5 - Product Today (MVP)
 **Working full-stack MVP in this repo**
 
-- Web app: real-time ICU graph + alarm inspector (`apps/web`, `frontend`)
+- Web app: real-time ICU graph + alarm inspector (`apps/web`)
 - Rust gateway: ingest + WebSocket fan-out (`services/gateway-rust`)
 - FastAPI inference: feature extraction + policy router (`services/inference-python`)
 - Node proof service: deterministic commitment/proof workflow (`services/proof-service-node`)
@@ -153,4 +153,3 @@ Speaker note: Be precise and measurable.
 - Baseline vs. pilot metrics: response time, suppression rate, escalation precision
 - Sales cycle assumptions: pilot length, conversion rate, ACV, payback
 - Regulatory/compliance posture: HIPAA controls, SOC 2 timeline, security roadmap
-
