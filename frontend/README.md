@@ -1,3 +1,3 @@
-# PulseMesh
+# PulseMesh Frontend
 
-Frontend workspace for PulseMesh, originally built for HackTJ 2026.
+This workspace contains the PulseMesh operator interface: a Next.js application for real-time telemetry visualization, alarm inspection, replay controls, and clinician-facing workflow surfaces.

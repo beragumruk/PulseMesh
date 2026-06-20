@@ -1,64 +1,83 @@
-# PulseMesh MVP
+# PulseMesh
 
-PulseMesh is an "Invisible Infrastructure" platform that transforms ICU physiologic data into a real-time, privacy-preserving alarm intelligence mesh.
+PulseMesh is a distributed critical-care telemetry platform for ingesting physiologic signals, prioritizing alarm response, and preserving auditability across the inference path. The system combines high-frequency event streaming, policy-constrained risk scoring, and proof-oriented artifact generation in a single research and engineering stack.
 
-Originally built for HackTJ 2026.
+## Why PulseMesh
 
-This monorepo provides an MVP implementation with:
+Modern bedside monitoring pipelines generate more alarms than care teams can review with equal attention. PulseMesh focuses on the systems problem behind that burden:
 
-- `apps/web`: Next.js App Router UI (Tailwind + shadcn-style primitives + Zustand + TanStack Query + React Three Fiber).
-- `services/gateway-rust`: Rust Axum event gateway with high-frequency telemetry simulation and WebSocket fan-out.
-- `services/inference-python`: FastAPI inference engine for feature extraction, actionability scoring, neuro-symbolic policy routing, and federated-round replay.
-- `services/proof-service-node`: Node.js proof service that commits feature vectors and produces verifiable proofs without exposing raw features.
-- `infra/db/migrations`: PostgreSQL + TimescaleDB + pgvector schema and indexes.
+- low-latency telemetry transport for numeric observations, waveforms, and alarm events
+- conservative inference that can assist prioritization without bypassing hard safety rules
+- privacy-preserving downstream artifacts that avoid exposing raw feature vectors
+- operator-facing visualization for replay, inspection, and explanation workflows
 
-## Architecture Summary
+## System Overview
 
-1. Telemetry enters gateway (`/ingest`, `/ingest/ws`) and is rebroadcast over `/ws`.
-2. Frontend subscribes to `/ws` for real-time ICU graph updates.
-3. Inference service consumes alarm + waveform feature snapshots, computes `p_actionable`, applies safety router, and emits decision metadata.
-4. Proof service computes deterministic commitment/proof artifacts for audit verification.
-5. Data is stored in Timescale hypertables and relational audit tables.
+PulseMesh is organized as a multi-service monorepo:
 
-## Quick Start (Docker)
+- `apps/web`: Next.js operator console for telemetry playback, waveform inspection, and alarm review workflows
+- `services/gateway-rust`: Axum-based event gateway that accepts ingest traffic and fans out normalized envelopes over WebSocket
+- `services/inference-python`: FastAPI inference service for feature extraction, actionability scoring, and neuro-symbolic routing
+- `services/proof-service-node`: proof artifact service that commits feature vectors and returns verifiable payloads for downstream audit checks
+- `infra/db/migrations`: PostgreSQL, TimescaleDB, and pgvector schema initialization
+
+At runtime, the platform follows a straightforward control path:
+
+1. Telemetry enters the Rust gateway through HTTP ingest or simulated streaming.
+2. The web client subscribes to normalized gateway envelopes over WebSocket.
+3. The inference service derives compact features, scores alarm actionability, and applies policy overrides before returning a routing decision.
+4. The proof service emits deterministic commitment artifacts tied to the scored event.
+5. Persisted time-series and relational records support replay, review, and operational analysis.
+
+## Architectural Characteristics
+
+- **Low-latency transport**: Rust gateway with broadcast fan-out for real-time consumers
+- **Conservative decision policy**: explicit hard-rule overrides for critical and sustained deterioration scenarios
+- **Separation of concerns**: gateway, inference, proof, storage, and UI are independently deployable services
+- **Audit-oriented outputs**: proof payloads preserve verification signals without retaining unnecessary raw detail in downstream consumers
+- **Research-friendly stack**: simulation, replay, and explainability surfaces are built into the platform rather than bolted on afterward
+
+## Repository Layout
+
+```text
+.
+|-- apps/web
+|-- services/gateway-rust
+|-- services/inference-python
+|-- services/proof-service-node
+|-- infra/db/migrations
+|-- db
+|-- docs
+`-- scripts
+```
+
+## Local Development
+
+### Docker Compose
 
 ```bash
 cp .env.example .env
 docker compose up --build
 ```
 
-Endpoints:
+Default service endpoints in the committed repository configuration:
 
 - Web UI: `http://localhost:3000`
-- Rust Gateway: `http://localhost:8080`
-- Python Inference: `http://localhost:8000/docs`
-- Node Proof Service: `http://localhost:7000/health`
+- Gateway API and WebSocket: `http://localhost:8080`
+- Inference API: `http://localhost:8000`
+- Proof service: `http://localhost:7000`
 - PostgreSQL: `localhost:5432`
 
-## Local Dev (without Docker)
+### Service-by-service
 
-### Database migrations
-
-```bash
-bash scripts/run-migrations.sh
-```
-
-### Frontend
-
-```bash
-cd apps/web
-npm install
-npm run dev
-```
-
-### Rust gateway
+Rust gateway:
 
 ```bash
 cd services/gateway-rust
 cargo run
 ```
 
-### Python inference
+Python inference:
 
 ```bash
 cd services/inference-python
@@ -68,7 +87,7 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload --port 8000
 ```
 
-### Proof service
+Node proof service:
 
 ```bash
 cd services/proof-service-node
@@ -76,8 +95,26 @@ npm install
 npm run dev
 ```
 
-## Notes
+Web console:
 
-- Clinical policy rules are conservative by design and documented inline in `services/inference-python/app/services/policy_router.py`.
-- Proof service currently implements a deterministic commitment/proof stub suitable for integration testing and audit flow demos.
-- The schema includes Timescale hypertable conversion for `numeric_obs` and pgvector extension enablement.
+```bash
+cd apps/web
+npm install
+npm run dev
+```
+
+Database migrations:
+
+```bash
+bash scripts/run-migrations.sh
+```
+
+## Safety and Verification Notes
+
+- The inference path is intentionally policy-constrained. Model output is advisory and can be overridden by hard clinical safety rules.
+- Explanation payloads are feature-level summaries rather than raw patient data dumps.
+- Proof generation is deterministic and structured for audit demonstrations and systems integration.
+
+## Provenance
+
+PulseMesh originated as a HackTJ 2026 prototype and has since been expanded into a production-style research platform.
